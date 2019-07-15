@@ -3,13 +3,15 @@
  */
 package javajwt;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Date;
 
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.jwk.*;
-import com.nimbusds.jose.jwk.gen.*;
 import com.nimbusds.jwt.*;
 
 public class App {
@@ -22,16 +24,64 @@ public class App {
         sign_request();
     }
 
-    public void sign_request()
-    {
-        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-        .subject("alice")
-        .issuer("https://c2id.com")
-        .expirationTime(new Date(new Date().getTime() + 60 * 1000))
-        .build();
 
-        SignedJWT signedJWT = new SignedJWT(
-        new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaJWK.getKeyID()).build(),
-        claimsSet);
+
+    public static void sign_request()
+    {
+        try{
+
+            RSAKey jwk = (RSAKey) JWK.parseFromPEMEncodedObjects(getKey("ssh_keygen_no_pass_pem"));
+//            Official example for Nimbus JOSE
+//            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+//                .subject("alice")
+//                .issuer("https://c2id.com")
+//                .expirationTime(new Date(new Date().getTime() + 60 * 1000))
+//                .build();
+
+            JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder();
+
+            claimsBuilder.audience("https://idad.jpmorganchase.com/adfs/oauth2/token/");
+
+            claimsBuilder.subject("CC-104212-I717389-12283-DEV");
+
+            claimsBuilder.issuer("CC-104212-I717389-12283-DEV");
+
+            final JWTClaimsSet claimsSet = claimsBuilder.build();
+
+            SignedJWT signedJWT = new SignedJWT(
+                new JWSHeader.Builder(JWSAlgorithm.RS256)
+                    .keyID(jwk.getKeyID())
+                    .build(),
+                claimsSet
+            );
+
+            JWSSigner signer = new RSASSASigner(jwk);
+            // Compute the RSA signature
+            signedJWT.sign(signer);
+            String s = signedJWT.serialize();
+
+            System.out.println(s);
+
+        }catch (IOException ioe)
+        {
+            System.out.println("IOException");
+            ioe.printStackTrace();
+        }catch (JOSEException je)
+        {
+            System.out.println("JOSE Exception");
+            je.printStackTrace();
+        }
+    }
+
+    private static String getKey(String filename) throws IOException {
+        // Read key from file
+        String strKeyPEM = "";
+        BufferedReader br = new BufferedReader(new FileReader(filename));
+        String line;
+        while ((line = br.readLine()) != null) {
+            strKeyPEM += line + "\n";
+        }
+        br.close();
+        return strKeyPEM;
     }
 }

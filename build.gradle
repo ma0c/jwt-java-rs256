@@ -28,8 +28,9 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 
     // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt
-    compile group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '2.10.1'
-
+    implementation 'com.nimbusds:nimbus-jose-jwt:7.4'
+    
+    compile group: 'org.bouncycastle', name: 'bcpkix-fips', version: '1.0.3'
 
 
 }
